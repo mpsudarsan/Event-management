@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Events — SecureApp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface2: #f0f3fa;
+      --border: #e4e8f0;
+      --accent: #4f7cff;
+      --accent-dim: rgba(79,124,255,0.09);
+      --accent-glow: rgba(79,124,255,0.22);
+      --text: #1a1d2e;
+      --muted: #8891aa;
+      --success: #22c55e;
+      --success-dim: rgba(34,197,94,0.1);
+      --error: #ef4444;
+      --error-dim: rgba(239,68,68,0.08);
+      --warning: #f59e0b;
+      --radius: 16px;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+    }
+
+    /* ── Background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: radial-gradient(circle, #d0d8f0 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.45;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: 1.1rem; color: var(--text); text-decoration: none;
+    }
+    .nav-brand .icon {
+      width: 34px; height: 34px;
+      background: var(--accent-dim);
+      border: 1.5px solid rgba(79,124,255,0.25);
+      border-radius: 9px;
+      display: grid; place-items: center;
+    }
+    .nav-brand .icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-badge {
+      font-size: 0.78rem; font-weight: 500;
+      background: var(--accent-dim); color: var(--accent);
+      border: 1px solid rgba(79,124,255,0.2);
+      border-radius: 99px; padding: 3px 11px;
+    }
+    .btn-logout {
+      font-size: 0.82rem; font-weight: 500;
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 6px 14px;
+      color: var(--muted); cursor: pointer;
+      transition: border-color .2s, color .2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+
+    /* ── Page wrapper ── */
+    .page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 40px 24px 60px; }
+
+    /* ── Hero ── */
+    .hero { margin-bottom: 36px; }
+    .hero-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--accent);
+      background: var(--accent-dim); border: 1px solid rgba(79,124,255,0.2);
+      border-radius: 99px; padding: 4px 12px; margin-bottom: 14px;
+    }
+    .hero-label svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .hero h1 {
+      font-family: 'Syne', sans-serif; font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800; letter-spacing: -0.03em; line-height: 1.15;
+      color: var(--text);
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p { color: var(--muted); font-size: 0.95rem; margin-top: 10px; max-width: 480px; }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px;
+    }
+    .stat-chip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 10px 18px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .stat-chip .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .stat-chip .stat-val { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; }
+    .stat-chip .stat-lbl { font-size: 0.78rem; color: var(--muted); }
+
+    /* ── Live indicator ── */
+    .live-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+    }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; color: var(--success); font-weight: 500;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--success);
+      animation: blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .refresh-btn {
+      background: none; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 5px 12px;
+      font-size: 0.78rem; color: var(--muted); cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      display: flex; align-items: center; gap: 6px;
+      transition: border-color .2s, color .2s;
+    }
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .refresh-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .5s; }
+    .refresh-btn.spinning svg { transform: rotate(360deg); }
+
+    /* ── Search / Filter ── */
+    .toolbar {
+      display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .search-wrap {
+      position: relative; flex: 1; min-width: 200px;
+    }
+    .search-wrap svg {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; stroke: var(--muted); fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .search-wrap input {
+      width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 9px 12px 9px 36px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.88rem; color: var(--text);
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .search-wrap input::placeholder { color: var(--muted); }
+    .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+
+    .filter-btn {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 9px 16px;
+      font-size: 0.85rem; color: var(--muted); cursor: pointer;
+      font-family: 'DM Sans', sans-serif; white-space: nowrap;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .filter-btn.active, .filter-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+    /* ── Grid ── */
+    .events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── Event Card ── */
+    .event-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      animation: cardIn .4s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .event-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(79,124,255,0.12);
+      border-color: rgba(79,124,255,0.25);
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* colour strip at top of card */
+    .card-strip {
+      height: 5px;
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+    }
+    .card-strip.low   { background: linear-gradient(90deg, var(--warning), #f97316); }
+    .card-strip.full  { background: linear-gradient(90deg, var(--error), #f97316); }
+    .card-strip.avail { background: linear-gradient(90deg, var(--success), #34d399); }
+
+    .card-body { padding: 22px 22px 20px; }
+
+    .card-cat {
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--accent);
+      background: var(--accent-dim); border-radius: 5px;
+      padding: 2px 8px; display: inline-block; margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700;
+      color: var(--text); line-height: 1.3; margin-bottom: 6px;
+    }
+    .card-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+
+    /* seats */
+    .seats-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .seats-pill {
+      font-size: 0.8rem; font-weight: 600; border-radius: 6px; padding: 3px 10px;
+    }
+    .seats-pill.avail { background: var(--success-dim); color: var(--success); }
+    .seats-pill.low   { background: rgba(245,158,11,0.1); color: var(--warning); }
+    .seats-pill.full  { background: var(--error-dim); color: var(--error); }
+
+    /* seat bar */
+    .seat-track {
+      background: var(--surface2); border-radius: 99px;
+      height: 5px; overflow: hidden; flex: 1;
+    }
+    .seat-fill {
+      height: 100%; border-radius: 99px;
+      transition: width .6s cubic-bezier(0.22,1,0.36,1);
+    }
+    .seat-fill.avail { background: var(--success); }
+    .seat-fill.low   { background: var(--warning); }
+    .seat-fill.full  { background: var(--error); }
+
+    /* book button */
+    .btn-book {
+      width: 100%; padding: 10px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 9px;
+      font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: background .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-book:hover { background: #3d6aff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,124,255,0.3); }
+    .btn-book:active { transform: translateY(0); }
+    .btn-book:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-book .btn-text { transition: opacity .2s; }
+    .btn-book .spinner {
+      display: none; width: 15px; height: 15px;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    }
+    @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+    .btn-book.loading .btn-text { opacity: 0; }
+    .btn-book.loading .spinner { display: block; }
+
+    /* ── Toast ── */
+    #toast-wrap {
+      position: fixed; bottom: 28px; right: 28px; z-index: 999;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 16px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+      font-size: 0.85rem; min-width: 260px; max-width: 320px;
+      pointer-events: all;
+      animation: toastIn .35s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .toast.removing { animation: toastOut .3s ease forwards; }
+    @keyframes toastIn  { from { opacity:0; transform: translateX(24px); } to { opacity:1; transform: translateX(0); } }
+    @keyframes toastOut { to   { opacity:0; transform: translateX(24px); } }
+    .toast-icon { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; flex-shrink: 0; }
+    .toast-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .toast.success .toast-icon { background: var(--success-dim); color: var(--success); }
+    .toast.error   .toast-icon { background: var(--error-dim);   color: var(--error); }
+
+    /* ── Empty / Loading state ── */
+    .state-box {
+      grid-column: 1/-1; text-align: center; padding: 60px 20px;
+      color: var(--muted);
+    }
+    .state-box svg { width: 48px; height: 48px; stroke: var(--border); fill: none; stroke-width: 1.5; margin-bottom: 14px; }
+    .state-box p { font-size: 0.9rem; }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface2) 25%, #e9ecf5 50%, var(--surface2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+    .skel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+    .skel-line { height: 14px; margin-bottom: 10px; }
+    .skel-title { width: 70%; }
+    .skel-sub   { width: 45%; }
+    .skel-btn   { height: 36px; width: 100%; margin-top: 16px; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+  <a class="nav-brand" href="#">
+    <div class="icon">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L6 7h12l-2-4z"/><path d="M12 12v4"/><path d="M10 14h4"/></svg>
+    </div>
+    SecureApp
+  </a>
+  <div class="nav-right">
+    <span class="nav-badge" id="userBadge">👤 User</span>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- Toast container -->
+<div id="toast-wrap"></div>
+
+<!-- Page -->
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-label">
+      <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+      Live Events
+    </div>
+    <h1>Book your <span>next experience</span></h1>
+    <p>Browse available events and secure your seat instantly. Seats update in real time.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-chip">
+      <div class="dot" style="background:var(--accent)"></div>
+      <div>
+        <div class="stat-val" id="statTotal">—</div>
+        <div class="stat-lbl">Total Events</div>
+      </div>
+    </div>
+    <div class="stat-chip">
+      <div class="dot" style="background:var(--success)"></div>
+      <div>
+        <div class="stat-val" id="statAvail">—</div>
+        <div class="stat-lbl">Available</div>
+      </div>
+    </div>
+    <div class="stat-chip">
+      <div class="dot" style="background:var(--error)"></div>
+      <div>
+        <div class="stat-val" id="statFull">—</div>
+        <div class="stat-lbl">Sold Out</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search events…" oninput="filterEvents()"/>
+    </div>
+    <button class="filter-btn active" id="filter-all"      onclick="setFilter('all')">All</button>
+    <button class="filter-btn"        id="filter-available" onclick="setFilter('available')">Available</button>
+    <button class="filter-btn"        id="filter-soldout"   onclick="setFilter('soldout')">Sold Out</button>
+  </div>
+
+  <!-- Live row -->
+  <div class="live-row">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Auto-refreshing every 5s
+    </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="manualRefresh()">
+      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Refresh now
+    </button>
+  </div>
+
+  <!-- Grid -->
+  <div class="events-grid" id="eventsGrid">
+    <!-- skeleton -->
+    <div class="skel-card"><div class="skeleton skel-line skel-title"></div><div class="skeleton skel-line skel-sub"></div><div class="skeleton skel-btn"></div></div>
+    <div class="skel-card"><div class="skeleton skel-line skel-title"></div><div class="skeleton skel-line skel-sub"></div><div class="skeleton skel-btn"></div></div>
+    <div class="skel-card"><div class="skeleton skel-line skel-title"></div><div class="skeleton skel-line skel-sub"></div><div class="skeleton skel-btn"></div></div>
+  </div>
+
+</div>
+
+<script>
+  let allEvents = [];
+  let activeFilter = 'all';
+
+  /* ── Toast ── */
+  function showToast(type, msg) {
+    const wrap = document.getElementById('toast-wrap');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success'
+      ? `<polyline points="20 6 9 17 4 12"/>`
+      : `<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`;
+    t.innerHTML = `
+      <div class="toast-icon"><svg viewBox="0 0 24 24">${icon}</svg></div>
+      <span>${msg}</span>`;
+    wrap.appendChild(t);
+    setTimeout(() => {
+      t.classList.add('removing');
+      t.addEventListener('animationend', () => t.remove());
+    }, 3500);
+  }
+
+  /* ── Stats ── */
+  function updateStats(data) {
+    const avail = data.filter(e => e.availableSeats > 0).length;
+    document.getElementById('statTotal').textContent = data.length;
+    document.getElementById('statAvail').textContent = avail;
+    document.getElementById('statFull').textContent  = data.length - avail;
+  }
+
+  /* ── Seat status ── */
+  function seatStatus(seats, total) {
+    const pct = total > 0 ? seats / total : 0;
+    if (seats === 0)   return 'full';
+    if (pct <= 0.2)    return 'low';
+    return 'avail';
+  }
+
+  /* ── Render ── */
+  function renderEvents(data) {
+    const grid   = document.getElementById('eventsGrid');
+    const q      = document.getElementById('searchInput').value.toLowerCase();
+    let filtered = data.filter(e => e.title.toLowerCase().includes(q));
+    if (activeFilter === 'available') filtered = filtered.filter(e => e.availableSeats > 0);
+    if (activeFilter === 'soldout')   filtered = filtered.filter(e => e.availableSeats === 0);
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="state-box">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <p>No events found.</p>
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map((e, i) => {
+      const total  = e.totalSeats || (e.availableSeats + (e.bookedSeats || 0)) || 100;
+      const status = seatStatus(e.availableSeats, total);
+      const fillPct = Math.max(0, Math.min(100, (e.availableSeats / total) * 100));
+      const seatLabel = status === 'full' ? 'Sold Out' : status === 'low' ? `${e.availableSeats} seats left` : `${e.availableSeats} seats`;
+      const btnLabel  = status === 'full' ? 'Sold Out' : 'Book 1 Seat';
+      const delay = i * 60;
+
+      return `
+      <div class="event-card" style="animation-delay:${delay}ms">
+        <div class="card-strip ${status}"></div>
+        <div class="card-body">
+          <div class="card-cat">Event</div>
+          <div class="card-title">${escHtml(e.title)}</div>
+          <div class="card-desc">${escHtml(e.description || 'Join us for this exciting event and secure your spot today.')}</div>
+
+          <div class="seats-row">
+            <span class="seats-pill ${status}">${seatLabel}</span>
+            <div class="seat-track">
+              <div class="seat-fill ${status}" style="width:${fillPct}%"></div>
+            </div>
+          </div>
+
+          <button class="btn-book" id="btn-${e.id}"
+            ${status === 'full' ? 'disabled' : `onclick="book(${e.id}, this)"`}>
+            <span class="btn-text">${btnLabel}</span>
+            <span class="spinner"></span>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  /* ── Filter ── */
+  function setFilter(f) {
+    activeFilter = f;
+    ['all','available','soldout'].forEach(id => {
+      document.getElementById(`filter-${id}`).classList.toggle('active', id === f);
+    });
+    renderEvents(allEvents);
+  }
+  function filterEvents() { renderEvents(allEvents); }
+
+  /* ── Load events ── */
+  function loadEvents(silent = false) {
+    if (!silent) {
+      const btn = document.getElementById('refreshBtn');
+      btn.classList.add('spinning');
+      setTimeout(() => btn.classList.remove('spinning'), 600);
+    }
+
+    fetch('/api/events')
+      .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+      .then(data => {
+        allEvents = data;
+        updateStats(data);
+        renderEvents(data);
+      })
+      .catch(() => {
+        if (!silent) showToast('error', 'Failed to load events. Check your connection.');
+      });
+  }
+
+  /* ── Book ── */
+  function book(id, btnEl) {
+    btnEl.classList.add('loading');
+    btnEl.disabled = true;
+
+    fetch(`/api/events/book?eventId=${id}&seats=1&userName=User1`, { method: 'POST' })
+      .then(res => { if (!res.ok) throw new Error(); return res.text(); })
+      .then(msg => {
+        showToast('success', msg || 'Seat booked successfully!');
+        loadEvents(true);
+      })
+      .catch(() => {
+        showToast('error', 'Booking failed. Please try again.');
+        btnEl.classList.remove('loading');
+        btnEl.disabled = false;
+      });
+  }
+
+  /* ── Manual refresh ── */
+  function manualRefresh() { loadEvents(false); }
+
+  /* ── Logout ── */
+  function logout() {
+    window.location.href = 'login.html';
+  }
+
+  /* ── Init ── */
+  loadEvents();
+  setInterval(() => loadEvents(true), 5000);
+</script>
+
+</body>
+</html>

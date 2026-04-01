@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — SecureApp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface2: #f0f3fa;
+      --border: #e4e8f0;
+      --accent: #4f7cff;
+      --accent-dim: rgba(79,124,255,0.09);
+      --text: #1a1d2e;
+      --muted: #8891aa;
+      --success: #22c55e;
+      --success-dim: rgba(34,197,94,0.1);
+      --error: #ef4444;
+      --error-dim: rgba(239,68,68,0.08);
+      --warning: #f59e0b;
+      --warning-dim: rgba(245,158,11,0.1);
+      --purple: #8b5cf6;
+      --purple-dim: rgba(139,92,246,0.1);
+      --radius: 16px;
+    }
+
+    html, body { min-height: 100%; background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: radial-gradient(circle, #d0d8f0 1px, transparent 1px);
+      background-size: 28px 28px; opacity: 0.45;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.88); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: var(--text); text-decoration: none;
+    }
+    .nav-brand .icon {
+      width: 34px; height: 34px; background: var(--accent-dim);
+      border: 1.5px solid rgba(79,124,255,0.25); border-radius: 9px;
+      display: grid; place-items: center;
+    }
+    .nav-brand .icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .admin-badge {
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em;
+      background: rgba(239,68,68,0.08); color: var(--error);
+      border: 1px solid rgba(239,68,68,0.2); border-radius: 99px; padding: 3px 11px;
+    }
+    .btn-logout {
+      font-size: 0.82rem; font-weight: 500; background: none;
+      border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 14px;
+      color: var(--muted); cursor: pointer; transition: border-color .2s, color .2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+
+    /* ── Page ── */
+    .page { position: relative; z-index: 1; max-width: 1160px; margin: 0 auto; padding: 40px 24px 60px; }
+
+    /* ── Hero ── */
+    .hero { margin-bottom: 32px; }
+    .hero-label {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--error); background: var(--error-dim); border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 99px; padding: 4px 12px; margin-bottom: 14px;
+    }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; letter-spacing: -0.03em; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { color: var(--muted); font-size: 0.92rem; margin-top: 8px; }
+
+    /* ── KPI chips ── */
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 32px; }
+    .kpi-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      display: flex; align-items: center; gap: 14px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,124,255,0.09); }
+    .kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+    .kpi-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .kpi-val { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; line-height: 1; }
+    .kpi-lbl { font-size: 0.75rem; color: var(--muted); margin-top: 3px; }
+
+    /* ── Layout columns ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px; align-items: start; margin-bottom: 24px; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden;
+    }
+    .panel-header {
+      padding: 18px 22px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .panel-title {
+      font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;
+    }
+    .panel-title svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .panel-body { padding: 22px; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 14px; }
+    label.field-label {
+      display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap svg {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; stroke: var(--muted); fill: none; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round; pointer-events: none; transition: stroke .2s;
+    }
+    .input-wrap:focus-within svg { stroke: var(--accent); }
+    input[type="text"], input[type="number"] {
+      width: 100%; background: #fafbfd; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 11px 13px 11px 38px; font-family: 'DM Sans', sans-serif; font-size: 0.92rem;
+      color: var(--text); outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    input::placeholder { color: #bcc3d6; }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-dim); background: #fff; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%; padding: 11px; background: var(--accent); color: #fff;
+      border: none; border-radius: 10px; font-family: 'Syne', sans-serif;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer; position: relative; overflow: hidden;
+      transition: background .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-primary:hover { background: #3d6aff; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,124,255,0.3); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary .btn-text { transition: opacity .2s; }
+    .btn-primary .spinner {
+      display: none; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    }
+    @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+    .btn-primary.loading .btn-text { opacity: 0; }
+    .btn-primary.loading .spinner { display: block; }
+
+    .btn-danger-sm {
+      font-size: 0.75rem; font-weight: 600; padding: 4px 10px;
+      background: var(--error-dim); color: var(--error);
+      border: 1px solid rgba(239,68,68,0.2); border-radius: 6px;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: background .15s;
+    }
+    .btn-danger-sm:hover { background: rgba(239,68,68,0.18); }
+
+    /* ── Msg ── */
+    .form-msg {
+      font-size: 0.8rem; border-radius: 8px; padding: 9px 12px;
+      margin-top: 12px; display: none; align-items: center; gap: 7px;
+    }
+    .form-msg.show { display: flex; }
+    .form-msg.success { color: var(--success); background: var(--success-dim); border: 1px solid rgba(34,197,94,0.2); }
+    .form-msg.error   { color: var(--error);   background: var(--error-dim);   border: 1px solid rgba(239,68,68,0.2); animation: shake .35s; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+
+    /* ── Chart ── */
+    .chart-wrap { position: relative; height: 300px; }
+
+    /* ── Events table ── */
+    .events-table { width: 100%; border-collapse: collapse; }
+    .events-table th {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--muted); padding: 10px 16px; text-align: left;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .events-table td { padding: 12px 16px; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    .events-table tr:last-child td { border-bottom: none; }
+    .events-table tr:hover td { background: var(--surface2); }
+    .events-table .ev-title { font-weight: 600; color: var(--text); }
+    .seats-pill {
+      display: inline-block; font-size: 0.75rem; font-weight: 600;
+      border-radius: 6px; padding: 2px 9px;
+    }
+    .seats-pill.avail { background: var(--success-dim); color: var(--success); }
+    .seats-pill.low   { background: var(--warning-dim); color: var(--warning); }
+    .seats-pill.full  { background: var(--error-dim); color: var(--error); }
+
+    /* mini bar */
+    .mini-track { background: var(--surface2); border-radius: 99px; height: 4px; width: 80px; overflow: hidden; }
+    .mini-fill   { height: 100%; border-radius: 99px; transition: width .5s; }
+    .mini-fill.avail { background: var(--success); }
+    .mini-fill.low   { background: var(--warning); }
+    .mini-fill.full  { background: var(--error); }
+
+    /* ── Toast ── */
+    #toast-wrap {
+      position: fixed; bottom: 28px; right: 28px; z-index: 999;
+      display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 16px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.12); font-size: 0.85rem;
+      min-width: 260px; max-width: 320px; pointer-events: all;
+      animation: toastIn .35s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .toast.removing { animation: toastOut .3s ease forwards; }
+    @keyframes toastIn  { from { opacity:0; transform: translateX(24px); } to { opacity:1; transform: translateX(0); } }
+    @keyframes toastOut { to   { opacity:0; transform: translateX(24px); } }
+    .toast-icon { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; flex-shrink: 0; }
+    .toast-icon svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .toast.success .toast-icon { background: var(--success-dim); color: var(--success); }
+    .toast.error   .toast-icon { background: var(--error-dim);   color: var(--error); }
+
+    /* ── Live row ── */
+    .live-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .live-badge { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--success); font-weight: 500; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: blink 1.4s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .refresh-btn {
+      background: none; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 5px 12px; font-size: 0.75rem; color: var(--muted); cursor: pointer;
+      font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 5px;
+      transition: border-color .2s, color .2s;
+    }
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .refresh-btn svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .5s; }
+    .refresh-btn.spinning svg { transform: rotate(360deg); }
+
+    /* ── Empty ── */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 0.88rem; }
+    .empty-state svg { width: 40px; height: 40px; stroke: var(--border); fill: none; stroke-width: 1.5; display: block; margin: 0 auto 12px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="#">
+    <div class="icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6L12 2z"/></svg>
+    </div>
+    SecureApp
+  </a>
+  <div class="nav-right">
+    <span class="admin-badge">⚙️ Admin</span>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</nav>
+
+<div id="toast-wrap"></div>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-label">⚙️ &nbsp;Admin Control Panel</div>
+    <h1>Dashboard <span>Overview</span></h1>
+    <p>Manage events, monitor seat availability, and track bookings in real time.</p>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:var(--accent-dim);color:var(--accent)">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L6 7h12l-2-4z"/></svg>
+      </div>
+      <div><div class="kpi-val" id="kpiTotal">—</div><div class="kpi-lbl">Total Events</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:var(--success-dim);color:var(--success)">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div><div class="kpi-val" id="kpiSeats">—</div><div class="kpi-lbl">Seats Available</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:var(--error-dim);color:var(--error)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </div>
+      <div><div class="kpi-val" id="kpiFull">—</div><div class="kpi-lbl">Sold Out</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:var(--purple-dim);color:var(--purple)">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div><div class="kpi-val" id="kpiBooked">—</div><div class="kpi-lbl">Total Booked</div></div>
+    </div>
+  </div>
+
+  <!-- Two col: form + chart -->
+  <div class="two-col">
+
+    <!-- Add Event Form -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Add New Event
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <label class="field-label">Event Name</label>
+          <div class="input-wrap">
+            <input type="text" id="title" placeholder="e.g. Tech Summit 2025"/>
+            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8L6 7h12l-2-4z"/></svg>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Total Seats</label>
+          <div class="input-wrap">
+            <input type="number" id="seats" placeholder="e.g. 200" min="1"/>
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="field-label">Description <span style="color:var(--muted);font-size:0.7rem;text-transform:none;letter-spacing:0">(optional)</span></label>
+          <div class="input-wrap">
+            <input type="text" id="description" placeholder="Short description of the event"/>
+            <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="addBtn" onclick="addEvent()">
+          <span class="btn-text">Add Event</span>
+          <span class="spinner"></span>
+        </button>
+
+        <div class="form-msg" id="formMsg"></div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Seat Availability Chart
+        </div>
+        <button class="refresh-btn" id="chartRefreshBtn" onclick="loadData(false)">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="panel-body">
+        <div class="live-row">
+          <div class="live-badge"><div class="live-dot"></div> Live — updates every 5s</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Events Table -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        All Events
+      </div>
+      <span id="tableCount" style="font-size:0.78rem;color:var(--muted)"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Event Name</th>
+            <th>Total Seats</th>
+            <th>Available</th>
+            <th>Booked</th>
+            <th>Fill Rate</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="eventsTableBody">
+          <tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>Loading events…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let chart;
+
+  /* ── Toast ── */
+  function showToast(type, msg) {
+    const wrap = document.getElementById('toast-wrap');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    const icon = type === 'success'
+      ? `<polyline points="20 6 9 17 4 12"/>`
+      : `<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`;
+    t.innerHTML = `<div class="toast-icon"><svg viewBox="0 0 24 24">${icon}</svg></div><span>${msg}</span>`;
+    wrap.appendChild(t);
+    setTimeout(() => { t.classList.add('removing'); t.addEventListener('animationend', () => t.remove()); }, 3500);
+  }
+
+  /* ── Form message ── */
+  function showFormMsg(type, text) {
+    const el = document.getElementById('formMsg');
+    el.className = `form-msg ${type}`;
+    el.innerHTML = (type === 'success' ? '✅ ' : '⚠️ ') + text;
+    void el.offsetWidth;
+    el.classList.add('show');
+    if (type === 'success') setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  /* ── Seat status ── */
+  function seatStatus(avail, total) {
+    if (avail === 0) return 'full';
+    if (total > 0 && avail / total <= 0.2) return 'low';
+    return 'avail';
+  }
+
+  /* ── KPIs ── */
+  function updateKPIs(data) {
+    const totalSeats = data.reduce((s, e) => s + (e.totalSeats || e.availableSeats), 0);
+    const avail      = data.reduce((s, e) => s + e.availableSeats, 0);
+    const booked     = totalSeats - avail;
+    const full       = data.filter(e => e.availableSeats === 0).length;
+    document.getElementById('kpiTotal').textContent  = data.length;
+    document.getElementById('kpiSeats').textContent  = avail;
+    document.getElementById('kpiBooked').textContent = booked;
+    document.getElementById('kpiFull').textContent   = full;
+  }
+
+  /* ── Table ── */
+  function updateTable(data) {
+    const tbody = document.getElementById('eventsTableBody');
+    document.getElementById('tableCount').textContent = `${data.length} event${data.length !== 1 ? 's' : ''}`;
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>No events yet. Add one above!</div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map((e, i) => {
+      const total   = e.totalSeats || e.availableSeats || 1;
+      const booked  = total - e.availableSeats;
+      const pct     = Math.round((booked / total) * 100);
+      const status  = seatStatus(e.availableSeats, total);
+      const labels  = { avail: 'Available', low: 'Low Seats', full: 'Sold Out' };
+
+      return `
+      <tr>
+        <td style="color:var(--muted);font-size:0.8rem">${i + 1}</td>
+        <td><span class="ev-title">${escHtml(e.title)}</span></td>
+        <td>${total}</td>
+        <td>${e.availableSeats}</td>
+        <td>${booked}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="mini-track"><div class="mini-fill ${status}" style="width:${pct}%"></div></div>
+            <span style="font-size:0.78rem;color:var(--muted)">${pct}%</span>
+          </div>
+        </td>
+        <td><span class="seats-pill ${status}">${labels[status]}</span></td>
+        <td><button class="btn-danger-sm" onclick="deleteEvent(${e.id}, this)">Delete</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ── Chart ── */
+  function updateChart(data) {
+    const labels = data.map(e => e.title);
+    const avail  = data.map(e => e.availableSeats);
+    const booked = data.map(e => (e.totalSeats || e.availableSeats) - e.availableSeats);
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(document.getElementById('chart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Available',
+            data: avail,
+            backgroundColor: 'rgba(34,197,94,0.7)',
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Booked',
+            data: booked,
+            backgroundColor: 'rgba(79,124,255,0.7)',
+            borderRadius: 6,
+            borderSkipped: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { font: { family: 'DM Sans', size: 12 }, color: '#8891aa', boxRadius: 4 } },
+          tooltip: {
+            backgroundColor: '#fff', titleColor: '#1a1d2e', bodyColor: '#8891aa',
+            borderColor: '#e4e8f0', borderWidth: 1,
+            titleFont: { family: 'Syne', weight: '700' },
+            padding: 10, cornerRadius: 10,
+          }
+        },
+        scales: {
+          x: {
+            stacked: false,
+            ticks: { font: { family: 'DM Sans', size: 11 }, color: '#8891aa' },
+            grid: { display: false },
+            border: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { font: { family: 'DM Sans', size: 11 }, color: '#8891aa', precision: 0 },
+            grid: { color: '#e4e8f0' },
+            border: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  /* ── Load all data ── */
+  function loadData(showRefreshAnim = false) {
+    if (showRefreshAnim) {
+      const btn = document.getElementById('chartRefreshBtn');
+      btn.classList.add('spinning');
+      setTimeout(() => btn.classList.remove('spinning'), 600);
+    }
+    fetch('/api/events')
+      .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+      .then(data => {
+        updateKPIs(data);
+        updateChart(data);
+        updateTable(data);
+      })
+      .catch(() => showToast('error', 'Failed to load events.'));
+  }
+
+  /* ── Add Event ── */
+  function addEvent() {
+    const title = document.getElementById('title').value.trim();
+    const seats = parseInt(document.getElementById('seats').value);
+    const desc  = document.getElementById('description').value.trim();
+    const btn   = document.getElementById('addBtn');
+
+    if (!title)       { showFormMsg('error', 'Please enter an event name.'); return; }
+    if (!seats || seats < 1) { showFormMsg('error', 'Please enter a valid seat count.'); return; }
+
+    btn.classList.add('loading'); btn.disabled = true;
+
+    fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, totalSeats: seats, description: desc || undefined })
+    })
+    .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+    .then(() => {
+      showFormMsg('success', `"${title}" added successfully!`);
+      showToast('success', `Event "${title}" created.`);
+      document.getElementById('title').value = '';
+      document.getElementById('seats').value = '';
+      document.getElementById('description').value = '';
+      loadData();
+    })
+    .catch(() => showFormMsg('error', 'Failed to add event. Try again.'))
+    .finally(() => { btn.classList.remove('loading'); btn.disabled = false; });
+  }
+
+  /* ── Delete Event ── */
+  function deleteEvent(id, btnEl) {
+    if (!confirm('Delete this event? This cannot be undone.')) return;
+    btnEl.textContent = '…'; btnEl.disabled = true;
+    fetch(`/api/events/${id}`, { method: 'DELETE' })
+      .then(res => { if (!res.ok) throw new Error(); })
+      .then(() => { showToast('success', 'Event deleted.'); loadData(); })
+      .catch(() => { showToast('error', 'Delete failed.'); btnEl.textContent = 'Delete'; btnEl.disabled = false; });
+  }
+
+  /* ── Helpers ── */
+  function escHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+  function logout() { window.location.href = 'login.html'; }
+
+  /* ── Enter key ── */
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') addEvent(); });
+
+  /* ── Init ── */
+  loadData(false);
+  setInterval(() => loadData(false), 5000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register — SecureApp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --border: #e4e8f0;
+      --border-focus: #4f7cff;
+      --accent: #4f7cff;
+      --accent-dim: rgba(79,124,255,0.08);
+      --accent-glow: rgba(79,124,255,0.18);
+      --text: #1a1d2e;
+      --muted: #8891aa;
+      --success: #22c55e;
+      --error: #ef4444;
+      --radius: 16px;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    /* ── Background dots ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: radial-gradient(circle, #d0d8f0 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.5;
+    }
+
+    /* ── Glow blob ── */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px; height: 600px;
+      top: -180px; right: -180px;
+      background: radial-gradient(circle, rgba(79,124,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 0; pointer-events: none;
+    }
+
+    /* ── Card ── */
+    .card {
+      position: relative; z-index: 1;
+      width: min(440px, 96vw);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 44px 40px 40px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 20px 60px rgba(79,124,255,0.08);
+      animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Header ── */
+    .logo-wrap {
+      display: flex; flex-direction: column; align-items: center; margin-bottom: 32px;
+    }
+    .logo-icon {
+      width: 54px; height: 54px;
+      background: var(--accent-dim);
+      border: 1.5px solid rgba(79,124,255,0.25);
+      border-radius: 14px;
+      display: grid; place-items: center;
+      margin-bottom: 16px;
+      box-shadow: 0 0 0 6px rgba(79,124,255,0.06);
+    }
+    .logo-icon svg {
+      width: 24px; height: 24px;
+      stroke: var(--accent); fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.55rem; font-weight: 800;
+      letter-spacing: -0.02em; color: var(--text);
+    }
+    .card-sub {
+      font-size: 0.85rem; color: var(--muted); margin-top: 5px;
+    }
+
+    /* ── Step indicator ── */
+    .steps {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin-bottom: 28px;
+    }
+    .step-dot {
+      width: 28px; height: 4px; border-radius: 99px;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+    .step-dot.active { background: var(--accent); }
+    .step-dot.done   { background: var(--success); }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 18px; }
+
+    label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; font-weight: 500;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 7px;
+    }
+
+    .input-wrap { position: relative; }
+    .input-wrap > svg {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      width: 16px; height: 16px;
+      stroke: var(--muted); fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      pointer-events: none; transition: stroke 0.2s;
+    }
+    .input-wrap:focus-within > svg { stroke: var(--accent); }
+
+    input, select {
+      width: 100%;
+      background: #fafbfd;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px 12px 40px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem; color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      appearance: none; -webkit-appearance: none;
+    }
+    input::placeholder { color: #bcc3d6; }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      background: #fff;
+      box-shadow: 0 0 0 4px var(--accent-dim);
+    }
+
+    /* custom select arrow */
+    .select-wrap { position: relative; }
+    .select-wrap select { padding-left: 40px; padding-right: 36px; cursor: pointer; }
+    .select-arrow {
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+      pointer-events: none; color: var(--muted);
+    }
+    .select-arrow svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
+
+    /* eye toggle */
+    .eye-btn {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: var(--muted); transition: color 0.2s;
+    }
+    .eye-btn:hover { color: var(--text); }
+    .eye-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; }
+    #password { padding-right: 40px; }
+
+    /* password strength */
+    .strength-bar {
+      display: flex; gap: 4px; margin-top: 8px;
+    }
+    .strength-seg {
+      flex: 1; height: 3px; border-radius: 99px;
+      background: var(--border); transition: background 0.3s;
+    }
+    .strength-label {
+      font-size: 0.75rem; color: var(--muted);
+      margin-top: 5px; min-height: 1em;
+      transition: color 0.3s;
+    }
+
+    /* Role cards */
+    .role-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .role-card {
+      border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      display: flex; align-items: center; gap: 10px;
+      position: relative;
+    }
+    .role-card:hover { border-color: #b8c8ff; background: #fafbff; }
+    .role-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    .role-card input[type="radio"] {
+      position: absolute; opacity: 0; width: 0; height: 0;
+    }
+    .role-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--border); display: grid; place-items: center; flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .role-card.selected .role-icon { background: rgba(79,124,255,0.15); }
+    .role-icon svg { width: 15px; height: 15px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .role-card.selected .role-icon svg { stroke: var(--accent); }
+    .role-info .role-name { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+    .role-info .role-desc { font-size: 0.73rem; color: var(--muted); margin-top: 1px; }
+
+    /* ── Messages ── */
+    .msg {
+      font-size: 0.82rem; border-radius: 8px; padding: 10px 13px;
+      margin-bottom: 16px; display: none;
+    }
+    .msg.show { display: flex; align-items: center; gap: 8px; }
+    .msg.error   { color: var(--error);   background: rgba(239,68,68,0.07);   border: 1px solid rgba(239,68,68,0.2);  animation: shake .35s ease; }
+    .msg.success { color: var(--success); background: rgba(34,197,94,0.07);   border: 1px solid rgba(34,197,94,0.2); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-5px); }
+      40%,80%  { transform: translateX(5px); }
+    }
+
+    /* ── Button ── */
+    .btn-register {
+      width: 100%; padding: 13px;
+      background: var(--accent);
+      color: #fff;
+      border: none; border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem; font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+    }
+    .btn-register:hover {
+      background: #3d6aff;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(79,124,255,0.35);
+    }
+    .btn-register:active { transform: translateY(0); box-shadow: none; }
+    .btn-register .btn-text { transition: opacity 0.2s; }
+    .btn-register .spinner {
+      display: none; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    }
+    @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+    .btn-register.loading .btn-text { opacity: 0; }
+    .btn-register.loading .spinner { display: block; }
+
+    /* ── Footer ── */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 22px 0 4px; color: var(--muted); font-size: 0.75rem;
+    }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background: var(--border); }
+    .card-footer { text-align: center; font-size: 0.85rem; color: var(--muted); }
+    .card-footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .card-footer a:hover { text-decoration: underline; }
+
+    /* ── Tooltip on admin ── */
+    .badge-admin {
+      font-size: 0.65rem; background: rgba(239,68,68,0.1);
+      color: var(--error); border-radius: 4px; padding: 1px 6px;
+      font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card" role="main">
+
+  <div class="logo-wrap">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    </div>
+    <h1 class="card-title">Create an account</h1>
+    <p class="card-sub">Fill in the details below to get started</p>
+  </div>
+
+  <!-- progress steps -->
+  <div class="steps" id="steps">
+    <div class="step-dot active" id="step1"></div>
+    <div class="step-dot" id="step2"></div>
+    <div class="step-dot" id="step3"></div>
+  </div>
+
+  <div class="msg error" id="errorMsg" role="alert"></div>
+  <div class="msg success" id="successMsg" role="status"></div>
+
+  <!-- Username -->
+  <div class="form-group">
+    <label for="username">
+      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Username
+    </label>
+    <div class="input-wrap">
+      <input id="username" type="text" placeholder="Choose a username" autocomplete="username" oninput="updateSteps()"/>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    </div>
+  </div>
+
+  <!-- Password -->
+  <div class="form-group">
+    <label for="password">
+      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap: round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Password
+    </label>
+    <div class="input-wrap">
+      <input id="password" type="password" placeholder="Create a strong password" autocomplete="new-password" oninput="checkStrength(); updateSteps()"/>
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <button class="eye-btn" type="button" id="togglePwd" aria-label="Toggle password visibility">
+        <svg id="eyeIcon" viewBox="0 0 24 24"><path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+    <div class="strength-bar">
+      <div class="strength-seg" id="s1"></div>
+      <div class="strength-seg" id="s2"></div>
+      <div class="strength-seg" id="s3"></div>
+      <div class="strength-seg" id="s4"></div>
+    </div>
+    <div class="strength-label" id="strengthLabel"></div>
+  </div>
+
+  <!-- Role -->
+  <div class="form-group">
+    <label>
+      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6L12 2z"/></svg>
+      Account Role
+    </label>
+    <div class="role-grid">
+
+      <label class="role-card selected" id="card-USER" onclick="selectRole('USER')">
+        <input type="radio" name="role" value="USER" id="role-USER" checked/>
+        <div class="role-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <div class="role-info">
+          <div class="role-name">User</div>
+          <div class="role-desc">Standard access</div>
+        </div>
+      </label>
+
+      <label class="role-card" id="card-ADMIN" onclick="selectRole('ADMIN')">
+        <input type="radio" name="role" value="ADMIN" id="role-ADMIN"/>
+        <div class="role-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6L12 2z"/></svg>
+        </div>
+        <div class="role-info">
+          <div class="role-name">Admin <span class="badge-admin">Pro</span></div>
+          <div class="role-desc">Full control</div>
+        </div>
+      </label>
+
+    </div>
+  </div>
+
+  <button class="btn-register" id="registerBtn" onclick="register()">
+    <span class="btn-text">Create Account</span>
+    <span class="spinner"></span>
+  </button>
+
+  <div class="divider">or</div>
+  <p class="card-footer">Already have an account? <a href="login.html">Sign in</a></p>
+
+</div>
+
+<script>
+  /* ── Eye toggle ── */
+  const eyeOpen   = `<path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>`;
+  const eyeClosed = `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+
+  document.getElementById('togglePwd').addEventListener('click', () => {
+    const input = document.getElementById('password');
+    const icon  = document.getElementById('eyeIcon');
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    icon.innerHTML = isHidden ? eyeClosed : eyeOpen;
+  });
+
+  /* ── Role select ── */
+  let selectedRole = 'USER';
+  function selectRole(role) {
+    selectedRole = role;
+    document.getElementById('role-USER').checked  = (role === 'USER');
+    document.getElementById('role-ADMIN').checked = (role === 'ADMIN');
+    document.getElementById('card-USER').classList.toggle('selected', role === 'USER');
+    document.getElementById('card-ADMIN').classList.toggle('selected', role === 'ADMIN');
+    updateSteps();
+  }
+
+  /* ── Password strength ── */
+  const segs = ['s1','s2','s3','s4'];
+  const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+  const labels = ['Weak','Fair','Good','Strong'];
+
+  function checkStrength() {
+    const val = document.getElementById('password').value;
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+
+    segs.forEach((id, i) => {
+      document.getElementById(id).style.background = i < score ? colors[score-1] : 'var(--border)';
+    });
+    const lbl = document.getElementById('strengthLabel');
+    if (val.length === 0) { lbl.textContent = ''; lbl.style.color = 'var(--muted)'; return; }
+    lbl.textContent = labels[score - 1] || 'Weak';
+    lbl.style.color = colors[score - 1] || colors[0];
+  }
+
+  /* ── Step progress ── */
+  function updateSteps() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const s1 = document.getElementById('step1');
+    const s2 = document.getElementById('step2');
+    const s3 = document.getElementById('step3');
+
+    s1.className = 'step-dot ' + (u ? 'done' : 'active');
+    s2.className = 'step-dot ' + (p.length >= 6 ? 'done' : u ? 'active' : '');
+    s3.className = 'step-dot ' + (u && p.length >= 6 ? 'active' : '');
+  }
+
+  /* ── Messages ── */
+  function showMsg(type, text) {
+    const err = document.getElementById('errorMsg');
+    const suc = document.getElementById('successMsg');
+    err.classList.remove('show'); suc.classList.remove('show');
+    const el = type === 'error' ? err : suc;
+    el.textContent = (type === 'error' ? '⚠️ ' : '✅ ') + text;
+    void el.offsetWidth;
+    el.classList.add('show');
+  }
+
+  /* ── Register ── */
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
+
+  function register() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const btn = document.getElementById('registerBtn');
+
+    if (!username) { showMsg('error', 'Please enter a username.'); return; }
+    if (username.length < 3) { showMsg('error', 'Username must be at least 3 characters.'); return; }
+    if (!password) { showMsg('error', 'Please enter a password.'); return; }
+    if (password.length < 6) { showMsg('error', 'Password must be at least 6 characters.'); return; }
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+    document.getElementById('errorMsg').classList.remove('show');
+
+    const user = { username, password, role: selectedRole };
+
+    fetch('/api/users/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user)
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Registration failed');
+      return res.json();
+    })
+    .then(() => {
+      showMsg('success', 'Account created! Redirecting to login…');
+      setTimeout(() => window.location.href = 'login.html', 1800);
+    })
+    .catch(() => {
+      showMsg('error', 'Registration failed. Username may already exist.');
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    });
+  }
+</script>
+
+</body>
+</html>
